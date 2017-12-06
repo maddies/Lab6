@@ -25,6 +25,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.shape.ArcTo;
 import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
@@ -85,65 +86,65 @@ public class BlackJackController implements Initializable {
 			break;
 		}
 
-
 		SequentialTransition seqDealTable = new SequentialTransition();
-		
-		
-		//	Transitions work by moving an item from 'Point A' to 'Point B'.
-		//		pntDeck = Point A
-		//		pntCardDealt = Point B
-		//	the code below will figure out where Point A and Point B are on the scene
-		
+
+		// Transitions work by moving an item from 'Point A' to 'Point B'.
+		// pntDeck = Point A
+		// pntCardDealt = Point B
+		// the code below will figure out where Point A and Point B are on the scene
+
 		Point2D pntCardDealt = null;
 
 		pntCardDealt = FindPoint(getCardHBox(iPosition), iDrawCard);
 
 		Point2D pntDeck = FindPoint(hBoxDeck, 0);
-		
-		
-		
-		//	Create a brand animation new image, drop it on the main screen.  The new image will be:
-		//		* created
-		//		* transitioned
-		//		* removed
-		
-		//	Create the animation image and put it on the main scene:
+
+		// Create a brand animation new image, drop it on the main screen. The new image
+		// will be:
+		// * created
+		// * transitioned
+		// * removed
+
+		// Create the animation image and put it on the main scene:
 		final ImageView img = BuildImage(0);
 		img.setX(pntDeck.getX());
 		img.setY(pntDeck.getY() - 33);
 		ImageView imgDealCard = BuildImage(11);
 		mainAnchor.getChildren().add(img);
 
-		//	Create the Translation transition (we're using a Path, but this is how you do a translate):
+		
+		// Create the Translation transition (we're using a Path, but this is how you do
+		// a translate):
 		TranslateTransition transT = CreateTranslateTransition(pntDeck, pntCardDealt, img);
-		
-		//	Create a Rotate transition
+
+		// Create a Rotate transition
 		RotateTransition rotT = CreateRotateTransition(img);
-		
-		//	Create a Scale transition (we're not using it, but this is how you do it)
+
+		// Create a Scale transition (we're not using it, but this is how you do it)
 		ScaleTransition scaleT = CreateScaleTransition(img);
-		
-		//	Create a Path transition
+
+		// Create a Path transition
 		PathTransition pathT = CreatePathTransition(pntDeck, pntCardDealt, img);
 
-		//	Create a new Parallel transition.
+		// Create a new Parallel transition.
 		ParallelTransition patTMoveRot = new ParallelTransition();
-		
-		//	Add transitions you want to execute currently to the parallel transition
-		patTMoveRot.getChildren().addAll(rotT, pathT);
+
+		// Add transitions you want to execute currently to the parallel transition
+		patTMoveRot.getChildren().addAll(rotT, pathT, scaleT);
 		// patTMoveRot.getChildren().addAll(pathT, rotT);
 
-		//	Create a new Parallel transition to fade in/fade out
+		// Create a new Parallel transition to fade in/fade out
 		ParallelTransition patTFadeInFadeOut = createFadeTransition(
 				(ImageView) getCardHBox(iPosition).getChildren().get(iDrawCard), imgDealCard.getImage());
 
-		//	Create a new sequential transition
+		// Create a new sequential transition
 		SequentialTransition seqDeal = new SequentialTransition();
 
-		//	Add the two parallel transitions to the sequential transition
+		// Add the two parallel transitions to the sequential transition
 		seqDeal.getChildren().addAll(patTMoveRot, patTFadeInFadeOut);
 
-		//	Set up event handler to remove the animation image after the transition is complete
+		// Set up event handler to remove the animation image after the transition is
+		// complete
 		seqDeal.setOnFinished(new EventHandler<ActionEvent>() {
 
 			public void handle(ActionEvent arg0) {
@@ -151,7 +152,7 @@ public class BlackJackController implements Initializable {
 			}
 		});
 
-		// 	Add the sequential transistion to the main sequential transision and play
+		// Add the sequential transistion to the main sequential transision and play
 		seqDealTable.getChildren().add(seqDeal);
 
 		seqDealTable.setInterpolator(Interpolator.EASE_OUT);
@@ -168,8 +169,6 @@ public class BlackJackController implements Initializable {
 		}
 
 	}
-
-
 
 	@FXML
 	public void btnStand_Click(ActionEvent event) {
@@ -287,31 +286,54 @@ public class BlackJackController implements Initializable {
 
 	private PathTransition CreatePathTransition(Point2D fromPoint, Point2D toPoint, ImageView img) {
 		Path path = new Path();
-		
-		//TODO: Fix the Path transition.  My Path looks terrible...  do something cool :)
-		
+
+
 		path.getElements().add(new MoveTo(fromPoint.getX(), fromPoint.getY()));
-		path.getElements().add(new CubicCurveTo(toPoint.getX() * 2, toPoint.getY() * 2, toPoint.getX() / 3,
-				toPoint.getY() / 3, toPoint.getX(), toPoint.getY()));
-		// path.getElements().add(new CubicCurveTo(0, 120, 0, 240, 380, 240));
+		/*path.getElements().add(new CubicCurveTo(toPoint.getX() * 2, toPoint.getY() * 2, toPoint.getX() / 3, toPoint.getY() / 3, toPoint.getX(), toPoint.getY()));
+		path.getElements().add(new CubicCurveTo(0, 120, 0, 240, 380, 240));
+		*/
+		ArcTo arcTo = new ArcTo();
+		arcTo.setX(toPoint.getX());
+		arcTo.setY(toPoint.getY());
+		arcTo.setRadiusX(Math.random()*100 - 50);
+		arcTo.setRadiusY(Math.random()*100 - 50);
+		path.getElements().add(arcTo);
+
 		PathTransition pathTransition = new PathTransition();
-		pathTransition.setDuration(Duration.millis(750));
+		pathTransition.setDuration(Duration.millis(500));
 		pathTransition.setPath(path);
 		pathTransition.setNode(img);
 		pathTransition.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
 		pathTransition.setCycleCount((int) 1f);
 		pathTransition.setAutoReverse(false);
-
+		
+		
 		return pathTransition;
 
 	}
+	
+	/*private ParallelTransition CreateNewParTransition(PathTransition pathTransition, ImageView img) {
+	
+		RotateTransition rotT = CreateRotateTransition(img);
+		rotT.setDuration(Duration.millis(800));
+		rotT.setCycleCount(1);
+		rotT.setByAngle(20000F);
+		rotT.setAutoReverse(false);
+
+		ParallelTransition patTMoveRot = new ParallelTransition();
+		patTMoveRot.getChildren().addAll(rotT, pathTransition);
+		
+		return patTMoveRot;
+		
+	}
+	*/
 
 	private ScaleTransition CreateScaleTransition(ImageView img) {
 		ScaleTransition st = new ScaleTransition(Duration.millis(iAnimationLength), img);
-		st.setByX(.25f);
-		st.setByY(.25f);
-		st.setCycleCount((int) 1f);
-		st.setAutoReverse(true);
+		st.setByX(3f);
+		st.setByY(3f);
+		st.setCycleCount((int) 0.3f);
+		st.setAutoReverse(false);
 
 		return st;
 	}
@@ -320,7 +342,7 @@ public class BlackJackController implements Initializable {
 
 		RotateTransition rotateTransition = new RotateTransition(Duration.millis(iAnimationLength / 2), img);
 		rotateTransition.setByAngle(180F);
-		rotateTransition.setCycleCount(2);
+		rotateTransition.setCycleCount(10);
 		rotateTransition.setAutoReverse(false);
 
 		return rotateTransition;
